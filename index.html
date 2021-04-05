@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>ブラウザで1問1答!</title>
+<script src="http://www.openjs.com/scripts/events/keyboard_shortcuts/shortcut.js"></script>
+<style>
+    h1{
+        background-color:#ff6530;
+    }
+    #questionList{
+        height:400px;
+        overflow-y:scroll;
+        background-color: #aaaaaa;
+    }
+    h2{
+        background-color:#dddddd;
+    }
+    input:focus{
+        border: 5px solid #ff6530;
+    }
+</style>
+<link rel="icon" type="image/x-icon" href="icon.png">
+</head>
+<body>
+    <div id="ホーム">
+        <button onclick="goToCreate()">問題集を作る</button>
+        <button onclick="goToSolve()">問題集を解く</button>
+        <p>「問題集を作る」では、問題集を作成し、PCやスマートフォンなど、お使いのデバイスに保存することができます。「問題集を解く」では、作成した問題集を開き、解くことができます。</p>
+    </div>
+    <div id="My問題集" style="display:none">
+        <button onclick="createBook()">はじめから問題集を作る</button>
+        <button onclick="createBookByFile()">問題集を途中から作る</button>
+    </div>
+    <div id="問" style="display:none">
+        <div id="questionList">
+            <table id="editTable"></table>
+        </div>
+        <button onclick="saveQuestion()" id="save">問題を保存する</button>
+    </div>
+    <div id="解答" style="display:none;">
+        <p id="q"></p>
+        <p>答え:<input id="a"/><button id="solve">解答</button></p>
+        <button onclick="finishSolving()">終わる</button>
+    </div>
+    <div id="正否" style="display:none">
+        <h1 id="isCorrect"></h1>
+        <p>問題<br/><span id="theQuestion"></span></p>
+        <p>あなたの解答<br/><span id="usersAnswer"></span></p>
+        <p>答え<br/><span id="correctAnswer"></span></p>
+        <p>正答率<br/><span id="countCorrect"></span></p>
+        <button onclick="ask()">次へ</button>
+    </div>
+<script>
+//variables
+const main=document.getElementById("ホーム"),
+myBooks=document.getElementById("My問題集"),
+myQuestions=document.getElementById("問"),
+questionList=document.getElementById("questionList"),
+editTable=document.getElementById("editTable"),
+saveQ=document.getElementById("save"),
+questionText=document.getElementById("q"),
+answerBox=document.getElementById("a"),
+solveButton=document.getElementById("solve"),
+correctAnswer=document.getElementById("correctAnswer"),
+usersAnswer=document.getElementById("usersAnswer"),
+theQuestion=document.getElementById("theQuestion"),
+isCorrect=document.getElementById("isCorrect"),
+countCorrect=document.getElementById("countCorrect");
+let editBook,numberOfCorrect,numberOfSolved,displayStates="ホーム";
+//socket.emit("upload",{question:"1+5=?",answer:"6"});
+//functons
+function display(id){
+    for(let i=0;i<document.body.childElementCount;i++){
+        document.body.children[i].style.display="none";
+    }
+    document.getElementById(id).style.display="block";
+    displayStates=id;
+}
+function createBook(){  //re
+    const n=window.prompt("問題集の名前は?");
+    editBook={name:n,questions:[]};
+    updateList();
+    display("問");
+}
+function saveQuestion(){  //re
+    editBook.questions=[];
+    for(let i=1;i<editTable.childElementCount;i++){
+        if(!(editTable.children[i].children[0].children[0].value==""||editTable.children[i].children[1].children[0].value==""))
+           editBook.questions.push({question:editTable.children[i].children[0].children[0].value,answer:editTable.children[i].children[1].children[0].value});
+    }
+    const a=document.createElement("a");
+    let blob=new Blob([JSON.stringify(editBook)],{type:"text/json"});
+    let url=URL.createObjectURL(blob);
+    a.href=url;
+    a.download=editBook.name+".json";
+    a.click();
+    display("ホーム");
+}
+
+function updateList(){  //re
+    while(editTable.firstChild)
+        editTable.removeChild(editTable.firstChild);
+    let el=document.createElement("tr"),el1=document.createElement("td"),el2=document.createElement("td"),el3=document.createElement("p"),el4=document.createElement("p");
+    el3.textContent="question";
+    el4.textContent="answer";
+    el.appendChild(el1);
+    el.appendChild(el2);
+    el1.appendChild(el3);
+    el2.appendChild(el4);
+    editTable.appendChild(el);
+    for(let i=0;i<editBook.questions.length;i++){
+        addQuestion(editBook.questions[i].question,editBook.questions[i].answer);
+    }
+    addQuestion("","");
+}
+function addQuestion(q,a){
+    let el=document.createElement("tr"),el1=document.createElement("td"),el2=document.createElement("td"),el3=document.createElement("input"),el4=document.createElement("input");
+    el3.value=q;
+    el4.value=a;
+    el1.appendChild(el3);
+    el2.appendChild(el4);
+    el.appendChild(el1);
+    el.appendChild(el2);
+    editTable.appendChild(el);
+    el3.onchange=autoAddQ;
+    el4.onchange=autoAddQ;
+}
+function autoAddQ(){
+    if(!(editTable.lastChild.children[0].children[0].value==""&&editTable.lastChild.children[1].children[0].value=="")){
+        console.log(editTable.lastChild.children[0].children[0].value+" "+editTable.lastChild.children[1].children[0].value);
+        console.log(editTable.lastChild.children[0].value=="");
+        addQuestion("","");
+    }
+}
+
+function createBookByFile(){
+    let input=document.createElement("input");
+    input.type="file";
+    input.accept="application/json";
+    input.click();
+    input.onchange=()=>{
+        let fr=new FileReader();
+        fr.onload=()=>{
+            editBook=JSON.parse(fr.result);
+            console.log(fr.result);
+            updateList();
+            display("問");
+        }
+        fr.readAsText(input.files[input.files.length-1]);
+    }
+}
+function goToCreate(){
+    display("My問題集");
+}
+function goToSolve(){
+    let input=document.createElement("input");
+    input.type="file";
+    input.accept="application/json";
+    input.click();
+    input.onchange=()=>{
+        let fr=new FileReader();
+        fr.onload=()=>{
+            editBook=JSON.parse(fr.result);
+            console.log(fr.result);
+            numberOfCorrect=0;
+            numberOfSolved=0;
+            ask();
+        }
+        fr.readAsText(input.files[input.files.length-1]);
+    }
+}
+function ask(){
+    display("解答");
+    let questions=editBook.questions;
+    let rand=Math.floor(Math.random()*questions.length);
+    questionText.textContent=questions[rand].question;
+    answerBox.value="";
+    solveButton.onclick=()=>{
+        display("正否");
+        theQuestion.textContent=questions[rand].question;
+        correctAnswer.textContent=questions[rand].answer;
+        usersAnswer.textContent=answerBox.value;
+        if(answerBox.value==questions[rand].answer){
+            isCorrect.textContent="正解!!";
+            numberOfCorrect++;
+        }else{
+            isCorrect.textContent="不正解..."
+        }
+        numberOfSolved++;
+        countCorrect.textContent=numberOfCorrect+"/"+numberOfSolved;
+        questions.splice(rand,1);
+    }
+}
+function finishSolving(){
+    display("ホーム");
+}
+shortcut.add("Enter",()=>{
+    switch(displayStates){
+        case "解答":
+            solveButton.click();
+            break;
+        case "正否":
+            ask();
+    }
+});
+</script>
+</body>
+</html>
