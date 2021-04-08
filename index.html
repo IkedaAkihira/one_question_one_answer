@@ -70,6 +70,65 @@ isCorrect=document.getElementById("isCorrect"),
 countCorrect=document.getElementById("countCorrect"),
 notSolvedCount=document.getElementById("notSolvedCount");
 let editBook,numberOfCorrect,numberOfSolved,displayStates="ホーム";
+display(localStorage.getItem("display")||"ホーム");
+editBook=JSON.parse(localStorage.getItem("editBook"));
+let questions;
+try{
+    questions=editBook.questions;
+}catch(e){
+    questions=[];
+}
+switch(displayStates){
+    case "問":
+        updateList();
+        break;
+    case "解答":
+        answerBox.value=localStorage.getItem("usersAnswer")||"";
+        numberOfCorrect=parseInt(localStorage.getItem("correctCount")||0);
+        numberOfSolved=parseInt(localStorage.getItem("solvedCount")||0);
+        if(questions.length){
+            let rand=parseInt(localStorage.getItem("rand"));
+            questionText.textContent=questions[rand].question;
+            answerBox.value=localStorage.getItem("usersInput");
+            solveButton.onclick=()=>{
+                display("正否");
+                theQuestion.textContent=questions[rand].question;
+                correctAnswer.textContent=questions[rand].answer;
+                usersAnswer.textContent=answerBox.value;
+                if(answerBox.value==questions[rand].answer){
+                    isCorrect.textContent="正解!!";
+                    questions.splice(rand,1);
+                    numberOfCorrect++;
+                }else{
+                    isCorrect.textContent="不正解..."
+                }
+                numberOfSolved++;
+                countCorrect.textContent=numberOfCorrect+"/"+numberOfSolved;
+                notSolvedCount.textContent=questions.length;
+            }
+        }else{
+            alert("すべての問題を正解しました!!");
+            display("ホーム");
+        }
+        break;
+    case "正否":
+        numberOfCorrect=parseInt(localStorage.getItem("correctCount")||0);
+        numberOfSolved=parseInt(localStorage.getItem("solvedCount")||0);
+        usersAnswer.textContent=localStorage.getItem("usersAnswer")||"";
+        let rand=parseInt(localStorage.getItem("rand"));
+        theQuestion.textContent=questions[rand].question;
+        correctAnswer.textContent=questions[rand].answer;
+        usersAnswer.textContent=localStorage.getItem("usersInput")||"";
+        if(answerBox.value==questions[rand].answer){
+            isCorrect.textContent="正解!!";
+            numberOfCorrect++;
+        }else{
+            isCorrect.textContent="不正解..."
+        }
+        countCorrect.textContent=numberOfCorrect+"/"+numberOfSolved;
+        notSolvedCount.textContent=questions.length;
+        break;
+}
 //socket.emit("upload",{question:"1+5=?",answer:"6"});
 //functons
 function display(id){
@@ -179,6 +238,7 @@ function ask(){
         let rand=Math.floor(Math.random()*questions.length);
         questionText.textContent=questions[rand].question;
         answerBox.value="";
+        localStorage.setItem("rand",rand);
         solveButton.onclick=()=>{
             display("正否");
             theQuestion.textContent=questions[rand].question;
@@ -212,6 +272,20 @@ shortcut.add("Enter",()=>{
             ask();
     }
 });
+onbeforeunload=()=>{
+    if(displayStates=="問"){
+        editBook.questions=[];
+        for(let i=1;i<editTable.childElementCount;i++){
+            if(!(editTable.children[i].children[0].children[0].value==""&&editTable.children[i].children[1].children[0].value==""))
+            editBook.questions.push({question:editTable.children[i].children[0].children[0].value,answer:editTable.children[i].children[1].children[0].value});
+    }
+    }
+    localStorage.setItem("display",displayStates);
+    localStorage.setItem("editBook",JSON.stringify(editBook));
+    localStorage.setItem("usersInput",answerBox.value);
+    localStorage.setItem("correctCount",numberOfCorrect);
+    localStorage.setItem("solvedCount",numberOfSolved);
+}
 </script>
 </body>
 </html>
