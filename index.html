@@ -173,23 +173,28 @@ function goToSolve(){
 function ask(){
     display("解答");
     let questions=editBook.questions;
-    let rand=Math.floor(Math.random()*questions.length);
-    questionText.textContent=questions[rand].question;
-    answerBox.value="";
-    solveButton.onclick=()=>{
-        display("正否");
-        theQuestion.textContent=questions[rand].question;
-        correctAnswer.textContent=questions[rand].answer;
-        usersAnswer.textContent=answerBox.value;
-        if(answerBox.value==questions[rand].answer){
-            isCorrect.textContent="正解!!";
-            numberOfCorrect++;
-        }else{
-            isCorrect.textContent="不正解..."
+    if(questions.length){
+        let rand=Math.floor(Math.random()*questions.length);
+        questionText.textContent=questions[rand].question;
+        answerBox.value="";
+        solveButton.onclick=()=>{
+            display("正否");
+            theQuestion.textContent=questions[rand].question;
+            correctAnswer.textContent=questions[rand].answer;
+            usersAnswer.textContent=answerBox.value;
+            if(answerBox.value==questions[rand].answer){
+                isCorrect.textContent="正解!!";
+                questions.splice(rand,1);
+                numberOfCorrect++;
+            }else{
+                isCorrect.textContent="不正解..."
+            }
+            numberOfSolved++;
+            countCorrect.textContent=numberOfCorrect+"/"+numberOfSolved;
         }
-        numberOfSolved++;
-        countCorrect.textContent=numberOfCorrect+"/"+numberOfSolved;
-        questions.splice(rand,1);
+    }else{
+        alert("すべての問題を正解しました!!");
+        display("ホーム");
     }
 }
 function finishSolving(){
