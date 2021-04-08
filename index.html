@@ -49,6 +49,7 @@
         <p>あなたの解答<br/><span id="usersAnswer"></span></p>
         <p>答え<br/><span id="correctAnswer"></span></p>
         <p>正答率<br/><span id="countCorrect"></span></p>
+        <p>残りの問題数<br/><span id="notSolvedCount"></span></p>
         <button onclick="ask()">次へ</button>
     </div>
 <script>
@@ -66,7 +67,8 @@ correctAnswer=document.getElementById("correctAnswer"),
 usersAnswer=document.getElementById("usersAnswer"),
 theQuestion=document.getElementById("theQuestion"),
 isCorrect=document.getElementById("isCorrect"),
-countCorrect=document.getElementById("countCorrect");
+countCorrect=document.getElementById("countCorrect"),
+notSolvedCount=document.getElementById("notSolvedCount");
 let editBook,numberOfCorrect,numberOfSolved,displayStates="ホーム";
 //socket.emit("upload",{question:"1+5=?",answer:"6"});
 //functons
@@ -191,6 +193,7 @@ function ask(){
             }
             numberOfSolved++;
             countCorrect.textContent=numberOfCorrect+"/"+numberOfSolved;
+            notSolvedCount.textContent=questions.length;
         }
     }else{
         alert("すべての問題を正解しました!!");
