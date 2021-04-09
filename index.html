@@ -90,6 +90,7 @@ switch(displayStates){
             let rand=parseInt(localStorage.getItem("rand"));
             questionText.textContent=questions[rand].question;
             answerBox.value=localStorage.getItem("usersInput");
+            answerBox.focus();
             solveButton.onclick=()=>{
                 display("正否");
                 theQuestion.textContent=questions[rand].question;
@@ -238,6 +239,7 @@ function ask(){
         let rand=Math.floor(Math.random()*questions.length);
         questionText.textContent=questions[rand].question;
         answerBox.value="";
+        answerBox.focus();
         localStorage.setItem("rand",rand);
         solveButton.onclick=()=>{
             display("正否");
