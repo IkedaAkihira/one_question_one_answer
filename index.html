@@ -141,9 +141,11 @@ function display(id){
 }
 function createBook(){  //re
     const n=window.prompt("問題集の名前は?");
-    editBook={name:n,questions:[]};
-    updateList();
-    display("問");
+    if(!n){
+        editBook={name:n,questions:[]};
+        updateList();
+        display("問");
+    }
 }
 function saveQuestion(){  //re
     editBook.questions=[];
